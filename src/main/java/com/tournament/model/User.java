@@ -32,9 +32,6 @@ public abstract class User {
     @Column(nullable = false)
     private AccountState accountState = AccountState.NEW;
 
-    @Column(nullable = false)
-    private boolean twoFactorEnabled = false;
-
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Notification> notifications = new ArrayList<>();
 
@@ -65,9 +62,6 @@ public abstract class User {
 
     public AccountState getAccountState() { return accountState; }
     public void setAccountState(AccountState accountState) { this.accountState = accountState; }
-
-    public boolean isTwoFactorEnabled() { return twoFactorEnabled; }
-    public void setTwoFactorEnabled(boolean twoFactorEnabled) { this.twoFactorEnabled = twoFactorEnabled; }
 
     public List<Notification> getNotifications() { return notifications; }
     public void setNotifications(List<Notification> notifications) { this.notifications = notifications; }
