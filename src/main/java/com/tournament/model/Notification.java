@@ -1,8 +1,20 @@
 package com.tournament.model;
 
-import com.tournament.model.enums.NotificationStatus;
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
+
+import com.tournament.model.enums.NotificationStatus;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "notifications")
@@ -33,38 +45,78 @@ public class Notification {
     @JoinColumn(name = "tournament_id")
     private Tournament tournament;
 
-    public Notification() {}
+    public Notification() {
+    }
 
     public Notification(String message, User user, Tournament tournament) {
         this.message = message;
         this.user = user;
         this.tournament = tournament;
-        this.sentTime = LocalDateTime.now();
-        this.status = NotificationStatus.SENT;
+        this.status = NotificationStatus.CREATED;
     }
 
     // Getters and Setters
-    public Integer getNotificationId() { return notificationId; }
-    public void setNotificationId(Integer notificationId) { this.notificationId = notificationId; }
+    public Integer getNotificationId() {
+        return notificationId;
+    }
 
-    public String getMessage() { return message; }
-    public void setMessage(String message) { this.message = message; }
+    public void setNotificationId(Integer notificationId) {
+        this.notificationId = notificationId;
+    }
 
-    public LocalDateTime getSentTime() { return sentTime; }
-    public void setSentTime(LocalDateTime sentTime) { this.sentTime = sentTime; }
+    public String getMessage() {
+        return message;
+    }
 
-    public LocalDateTime getDeliveredTime() { return deliveredTime; }
-    public void setDeliveredTime(LocalDateTime deliveredTime) { this.deliveredTime = deliveredTime; }
+    public void setMessage(String message) {
+        this.message = message;
+    }
 
-    public LocalDateTime getReadTime() { return readTime; }
-    public void setReadTime(LocalDateTime readTime) { this.readTime = readTime; }
+    public LocalDateTime getSentTime() {
+        return sentTime;
+    }
 
-    public NotificationStatus getStatus() { return status; }
-    public void setStatus(NotificationStatus status) { this.status = status; }
+    public void setSentTime(LocalDateTime sentTime) {
+        this.sentTime = sentTime;
+    }
 
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
+    public LocalDateTime getDeliveredTime() {
+        return deliveredTime;
+    }
 
-    public Tournament getTournament() { return tournament; }
-    public void setTournament(Tournament tournament) { this.tournament = tournament; }
+    public void setDeliveredTime(LocalDateTime deliveredTime) {
+        this.deliveredTime = deliveredTime;
+    }
+
+    public LocalDateTime getReadTime() {
+        return readTime;
+    }
+
+    public void setReadTime(LocalDateTime readTime) {
+        this.readTime = readTime;
+    }
+
+    public NotificationStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(NotificationStatus status) {
+        this.status = status;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public Tournament getTournament() {
+        return tournament;
+    }
+
+    public void setTournament(Tournament tournament) {
+        this.tournament = tournament;
+    }
 }

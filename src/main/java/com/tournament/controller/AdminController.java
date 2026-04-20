@@ -1,18 +1,23 @@
 package com.tournament.controller;
 
-import com.tournament.model.User;
-import com.tournament.service.DisputeService;
-import com.tournament.service.analytics.AnalyticsService;
-import com.tournament.model.enums.TournamentStatus;
-import com.tournament.model.enums.AccountState;
-import com.tournament.service.TournamentService;
-import com.tournament.service.UserService;
+import java.util.List;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.List;
+import com.tournament.model.User;
+import com.tournament.model.enums.AccountState;
+import com.tournament.model.enums.TournamentStatus;
+import com.tournament.service.DisputeService;
+import com.tournament.service.TournamentService;
+import com.tournament.service.UserService;
+import com.tournament.service.analytics.AnalyticsService;
+import com.tournament.service.analytics.ReportLifecycleService;
 
 @Controller
 @RequestMapping("/admin")
@@ -22,15 +27,18 @@ public class AdminController {
     private final TournamentService tournamentService;
     private final DisputeService disputeService;
     private final AnalyticsService analyticsService;
+    private final ReportLifecycleService reportLifecycleService;
 
     public AdminController(UserService userService,
-                           TournamentService tournamentService,
-                           DisputeService disputeService,
-                           AnalyticsService analyticsService) {
+            TournamentService tournamentService,
+            DisputeService disputeService,
+            AnalyticsService analyticsService,
+            ReportLifecycleService reportLifecycleService) {
         this.userService = userService;
         this.tournamentService = tournamentService;
         this.disputeService = disputeService;
         this.analyticsService = analyticsService;
+        this.reportLifecycleService = reportLifecycleService;
     }
 
     @GetMapping("/dashboard")
@@ -60,10 +68,10 @@ public class AdminController {
     public String toggleUserStatus(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
         try {
             User user = userService.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
             AccountState newStatus = (user.getAccountState() == AccountState.SUSPENDED)
-                ? AccountState.ACTIVE
-                : AccountState.SUSPENDED;
+                    ? AccountState.ACTIVE
+                    : AccountState.SUSPENDED;
             userService.updateUserStatus(id, newStatus);
             redirectAttributes.addFlashAttribute("success", "User status updated to " + newStatus.name());
         } catch (Exception e) {
@@ -108,7 +116,41 @@ public class AdminController {
         model.addAttribute("raisedDisputes", analyticsService.getRaisedDisputes());
         model.addAttribute("underReviewDisputes", analyticsService.getUnderReviewDisputes());
         model.addAttribute("closedDisputes", analyticsService.getClosedDisputes());
+        model.addAttribute("reportStatus", reportLifecycleService.getCurrentStatus());
         return "admin/reports";
+    }
+
+    @PostMapping("/reports/generate")
+    public String generateReport(RedirectAttributes redirectAttributes) {
+        try {
+            reportLifecycleService.generate();
+            redirectAttributes.addFlashAttribute("success", "Report generated.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/admin/reports";
+    }
+
+    @PostMapping("/reports/publish")
+    public String publishReport(RedirectAttributes redirectAttributes) {
+        try {
+            reportLifecycleService.publish();
+            redirectAttributes.addFlashAttribute("success", "Report published.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/admin/reports";
+    }
+
+    @PostMapping("/reports/archive")
+    public String archiveReport(RedirectAttributes redirectAttributes) {
+        try {
+            reportLifecycleService.archive();
+            redirectAttributes.addFlashAttribute("success", "Report archived.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/admin/reports";
     }
 
     @GetMapping("/disputes")

@@ -1,5 +1,10 @@
 package com.tournament.service;
 
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.tournament.model.Dispute;
 import com.tournament.model.Match;
 import com.tournament.model.Notification;
@@ -12,10 +17,6 @@ import com.tournament.model.enums.MatchStatus;
 import com.tournament.repository.DisputeRepository;
 import com.tournament.repository.MatchRepository;
 import com.tournament.repository.ResultRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @Transactional
@@ -25,23 +26,27 @@ public class DisputeService {
     private final MatchRepository matchRepository;
     private final ResultRepository resultRepository;
     private final INotificationService notificationService;
+    private final TournamentService tournamentService;
 
-    public DisputeService(DisputeRepository disputeRepository,
-                          MatchRepository matchRepository,
-                          ResultRepository resultRepository,
-                          INotificationService notificationService) {
+    public DisputeService(
+            DisputeRepository disputeRepository,
+            MatchRepository matchRepository,
+            ResultRepository resultRepository,
+            INotificationService notificationService,
+            TournamentService tournamentService) {
         this.disputeRepository = disputeRepository;
         this.matchRepository = matchRepository;
         this.resultRepository = resultRepository;
         this.notificationService = notificationService;
+        this.tournamentService = tournamentService;
     }
 
     public Dispute raiseDispute(Dispute dispute) {
         Dispute saved = disputeRepository.save(dispute);
         notificationService.sendNotification(new Notification(
-            "Dispute raised for match " + dispute.getMatch().getMatchId(),
-            dispute.getRaisedBy(),
-            dispute.getMatch().getBracket().getTournament()));
+                "Dispute raised for match " + dispute.getMatch().getMatchId(),
+                dispute.getRaisedBy(),
+                dispute.getMatch().getBracket().getTournament()));
         return saved;
     }
 
@@ -51,13 +56,13 @@ public class DisputeService {
             throw new IllegalArgumentException("Dispute reason is required");
         }
         Match match = matchRepository.findById(matchId)
-            .orElseThrow(() -> new IllegalArgumentException("Match not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Match not found"));
         if (match.getResult() == null) {
             throw new IllegalStateException("Cannot dispute a match without a result");
         }
         boolean playerInMatch = match.getTeams().stream()
-            .flatMap(team -> team.getMembers().stream())
-            .anyMatch(member -> member.getUserId().equals(player.getUserId()));
+                .flatMap(team -> team.getMembers().stream())
+                .anyMatch(member -> member.getUserId().equals(player.getUserId()));
         if (!playerInMatch) {
             throw new SecurityException("Player is not part of this match");
         }
@@ -89,10 +94,13 @@ public class DisputeService {
         match.setStatus(MatchStatus.COMPLETED);
         matchRepository.save(match);
 
+        // Keep standings aligned with dispute outcomes using a lightweight full rebuild.
+        tournamentService.rebuildLeaderboard(match.getBracket().getTournament().getTournamentId());
+
         notificationService.sendNotification(new Notification(
-            "Dispute accepted. Result updated for match " + match.getMatchId(),
-            dispute.getRaisedBy(),
-            match.getBracket().getTournament()));
+                "Dispute accepted. Result updated for match " + match.getMatchId(),
+                dispute.getRaisedBy(),
+                match.getBracket().getTournament()));
         notifyMatchParticipants(match, "Dispute accepted for match " + match.getMatchId() + ". Result has been updated.");
         dispute.close();
         return disputeRepository.save(dispute);
@@ -112,11 +120,11 @@ public class DisputeService {
         Dispute dispute = getDispute(disputeId);
         dispute.reject();
         notificationService.sendNotification(new Notification(
-            "Dispute rejected for match " + dispute.getMatch().getMatchId(),
-            dispute.getRaisedBy(),
-            dispute.getMatch().getBracket().getTournament()));
+                "Dispute rejected for match " + dispute.getMatch().getMatchId(),
+                dispute.getRaisedBy(),
+                dispute.getMatch().getBracket().getTournament()));
         notifyMatchParticipants(dispute.getMatch(),
-            "Dispute rejected for match " + dispute.getMatch().getMatchId() + ". Original result stands.");
+                "Dispute rejected for match " + dispute.getMatch().getMatchId() + ". Original result stands.");
         dispute.close();
         return disputeRepository.save(dispute);
     }
@@ -139,7 +147,7 @@ public class DisputeService {
 
     public Dispute getDispute(Integer disputeId) {
         return disputeRepository.findById(disputeId)
-            .orElseThrow(() -> new IllegalArgumentException("Dispute not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Dispute not found"));
     }
 
     public java.util.List<Dispute> getOpenDisputes() {
@@ -172,8 +180,8 @@ public class DisputeService {
 
     private void notifyMatchParticipants(Match match, String message) {
         match.getTeams().stream()
-            .flatMap(team -> team.getMembers().stream())
-            .forEach(player -> notificationService.sendNotification(
+                .flatMap(team -> team.getMembers().stream())
+                .forEach(player -> notificationService.sendNotification(
                 new Notification(message, player, match.getBracket().getTournament())));
     }
 }

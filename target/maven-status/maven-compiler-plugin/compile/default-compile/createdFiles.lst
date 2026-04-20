@@ -13,6 +13,7 @@ com\tournament\service\strategy\BracketGenerationStrategy.class
 com\tournament\controller\PlayerController.class
 com\tournament\model\Result.class
 com\tournament\model\LeaderboardEntry.class
+com\tournament\model\enums\ReportStatus.class
 com\tournament\service\analytics\Report.class
 com\tournament\controller\DisputePageController.class
 com\tournament\service\AuthSession.class
@@ -47,6 +48,7 @@ com\tournament\service\factory\UserFactory$1.class
 com\tournament\service\observer\TournamentObserver.class
 com\tournament\service\strategy\RoundRobinBracketStrategy.class
 com\tournament\model\Tournament.class
+com\tournament\service\analytics\ReportLifecycleService.class
 com\tournament\repository\MatchRepository.class
 com\tournament\model\Registration.class
 com\tournament\repository\NotificationRepository.class

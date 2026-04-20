@@ -1,18 +1,36 @@
 package com.tournament.service;
 
-import com.tournament.model.*;
-import com.tournament.model.enums.*;
-import com.tournament.repository.*;
-import com.tournament.service.factory.BracketFactory;
-import com.tournament.service.observer.TournamentObserver;
-import com.tournament.service.strategy.BracketGenerationStrategy;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.Optional;
+import com.tournament.model.Bracket;
+import com.tournament.model.Leaderboard;
+import com.tournament.model.Match;
+import com.tournament.model.Organizer;
+import com.tournament.model.Player;
+import com.tournament.model.Registration;
+import com.tournament.model.Result;
+import com.tournament.model.Team;
+import com.tournament.model.Tournament;
+import com.tournament.model.enums.BracketType;
+import com.tournament.model.enums.MatchStatus;
+import com.tournament.model.enums.RegistrationStatus;
+import com.tournament.model.enums.TournamentFormat;
+import com.tournament.model.enums.TournamentStatus;
+import com.tournament.repository.BracketRepository;
+import com.tournament.repository.MatchRepository;
+import com.tournament.repository.RegistrationRepository;
+import com.tournament.repository.ResultRepository;
+import com.tournament.repository.TeamRepository;
+import com.tournament.repository.TournamentRepository;
+import com.tournament.service.factory.BracketFactory;
+import com.tournament.service.observer.TournamentObserver;
+import com.tournament.service.strategy.BracketGenerationStrategy;
 
 @Service
 @Transactional
@@ -30,13 +48,13 @@ public class TournamentService {
     private final Map<Integer, Leaderboard> leaderboards = new ConcurrentHashMap<>();
 
     public TournamentService(TournamentRepository tournamentRepository,
-                             RegistrationRepository registrationRepository,
-                             BracketRepository bracketRepository,
-                             MatchRepository matchRepository,
-                             TeamRepository teamRepository,
-                             ResultRepository resultRepository,
-                             BracketFactory bracketFactory,
-                             List<TournamentObserver> observers) {
+            RegistrationRepository registrationRepository,
+            BracketRepository bracketRepository,
+            MatchRepository matchRepository,
+            TeamRepository teamRepository,
+            ResultRepository resultRepository,
+            BracketFactory bracketFactory,
+            List<TournamentObserver> observers) {
         this.tournamentRepository = tournamentRepository;
         this.registrationRepository = registrationRepository;
         this.bracketRepository = bracketRepository;
@@ -48,7 +66,6 @@ public class TournamentService {
     }
 
     // ---- Tournament CRUD ----
-
     public Tournament createTournament(Tournament tournament, Organizer organizer) {
         tournament.setOrganizer(organizer);
         if (tournament.getStatus() == TournamentStatus.DRAFT) {
@@ -62,14 +79,14 @@ public class TournamentService {
 
     public Tournament openRegistration(Integer tournamentId) {
         Tournament tournament = tournamentRepository.findById(tournamentId)
-            .orElseThrow(() -> new IllegalArgumentException("Tournament not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Tournament not found"));
         tournament.openRegistration();
         return tournamentRepository.save(tournament);
     }
 
     public Tournament closeRegistration(Integer tournamentId) {
         Tournament tournament = tournamentRepository.findById(tournamentId)
-            .orElseThrow(() -> new IllegalArgumentException("Tournament not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Tournament not found"));
         tournament.closeRegistration();
         return tournamentRepository.save(tournament);
     }
@@ -95,10 +112,9 @@ public class TournamentService {
     }
 
     // ---- Registration ----
-
     public Registration registerPlayer(Integer tournamentId, Player player, Team team) {
         Tournament tournament = tournamentRepository.findById(tournamentId)
-            .orElseThrow(() -> new IllegalArgumentException("Tournament not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Tournament not found"));
 
         if (tournament.getStatus() != TournamentStatus.REGISTRATION_OPEN) {
             throw new IllegalStateException("Registration is not open for this tournament");
@@ -119,7 +135,7 @@ public class TournamentService {
         }
 
         if (team != null && registrationRepository
-            .existsByTournament_TournamentIdAndTeam_TeamId(tournamentId, team.getTeamId())) {
+                .existsByTournament_TournamentIdAndTeam_TeamId(tournamentId, team.getTeamId())) {
             throw new IllegalArgumentException("Team already registered for this tournament");
         }
 
@@ -143,14 +159,14 @@ public class TournamentService {
 
     public Registration approveRegistration(Integer registrationId) {
         Registration registration = registrationRepository.findById(registrationId)
-            .orElseThrow(() -> new IllegalArgumentException("Registration not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Registration not found"));
         registration.approve();
         return registrationRepository.save(registration);
     }
 
     public Registration rejectRegistration(Integer registrationId) {
         Registration registration = registrationRepository.findById(registrationId)
-            .orElseThrow(() -> new IllegalArgumentException("Registration not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Registration not found"));
         registration.reject();
         return registrationRepository.save(registration);
     }
@@ -161,7 +177,7 @@ public class TournamentService {
 
     public List<Registration> getApprovedRegistrations(Integer tournamentId) {
         return registrationRepository.findByTournament_TournamentIdAndStatus(
-            tournamentId, RegistrationStatus.APPROVED);
+                tournamentId, RegistrationStatus.APPROVED);
     }
 
     public List<Registration> getPlayerRegistrations(Integer playerId) {
@@ -169,10 +185,9 @@ public class TournamentService {
     }
 
     // ---- Bracket Generation (Strategy Pattern) ----
-
     public Bracket generateBracket(Integer tournamentId) {
         Tournament tournament = tournamentRepository.findById(tournamentId)
-            .orElseThrow(() -> new IllegalArgumentException("Tournament not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Tournament not found"));
 
         if (tournament.getStatus() != TournamentStatus.REGISTRATION_CLOSED) {
             throw new IllegalStateException("Registration must be closed before generating brackets");
@@ -187,12 +202,12 @@ public class TournamentService {
 
         // Get approved teams
         List<Registration> approved = registrationRepository
-            .findByTournament_TournamentIdAndStatus(tournamentId, RegistrationStatus.APPROVED);
+                .findByTournament_TournamentIdAndStatus(tournamentId, RegistrationStatus.APPROVED);
         List<Team> teams = approved.stream()
-            .map(Registration::getTeam)
-            .filter(t -> t != null)
-            .distinct()
-            .toList();
+                .map(Registration::getTeam)
+                .filter(t -> t != null)
+                .distinct()
+                .toList();
 
         if (teams.size() < 2) {
             throw new IllegalArgumentException("Need at least 2 teams to generate brackets");
@@ -222,14 +237,13 @@ public class TournamentService {
     }
 
     // ---- Match Results ----
-
     public List<Match> getMatches(Integer tournamentId) {
         return matchRepository.findByBracket_Tournament_TournamentId(tournamentId);
     }
 
     public Match getMatch(Integer matchId) {
         return matchRepository.findById(matchId)
-            .orElseThrow(() -> new IllegalArgumentException("Match not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Match not found"));
     }
 
     public Match startMatch(Integer matchId) {
@@ -240,7 +254,7 @@ public class TournamentService {
 
     public Result submitResult(Integer matchId, int scoreA, int scoreB) {
         Match match = matchRepository.findById(matchId)
-            .orElseThrow(() -> new IllegalArgumentException("Match not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Match not found"));
 
         if (match.getTeams().size() < 2) {
             throw new IllegalArgumentException("Match does not have two teams assigned");
@@ -278,7 +292,7 @@ public class TournamentService {
         matchRepository.save(match);
 
         Leaderboard leaderboard = leaderboards.computeIfAbsent(
-            match.getBracket().getTournament().getTournamentId(), id -> new Leaderboard());
+                match.getBracket().getTournament().getTournamentId(), id -> new Leaderboard());
         leaderboard.update(result);
 
         Tournament tournament = match.getBracket().getTournament();
@@ -288,7 +302,7 @@ public class TournamentService {
 
     public void completeTournament(Integer tournamentId) {
         Tournament tournament = tournamentRepository.findById(tournamentId)
-            .orElseThrow(() -> new IllegalArgumentException("Tournament not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Tournament not found"));
         tournament.setStatus(TournamentStatus.COMPLETED);
         tournamentRepository.save(tournament);
         observers.forEach(o -> o.onTournamentCompleted(tournament));
@@ -298,8 +312,17 @@ public class TournamentService {
         return leaderboards.getOrDefault(tournamentId, new Leaderboard());
     }
 
-    // ---- Statistics ----
+    public void rebuildLeaderboard(Integer tournamentId) {
+        Leaderboard rebuilt = new Leaderboard();
+        List<Match> matches = getMatches(tournamentId);
+        matches.stream()
+                .map(Match::getResult)
+                .filter(result -> result != null)
+                .forEach(rebuilt::update);
+        leaderboards.put(tournamentId, rebuilt);
+    }
 
+    // ---- Statistics ----
     public long getTournamentCount() {
         return tournamentRepository.count();
     }
