@@ -68,24 +68,9 @@ public class AuthManager {
             throw new SecurityException("Email verification required");
         }
 
-        if (user.isTwoFactorEnabled()) {
-            verificationService.issueOtp(user.getUserId());
-            return new AuthSession(user.getUserId(), user.getRole(), user.getAccountState(), true);
-        }
-
         user.setAccountState(AccountState.ACTIVE);
         userRepository.save(user);
-        return new AuthSession(user.getUserId(), user.getRole(), user.getAccountState(), false);
-    }
-
-    public AuthSession verifyOtp(Integer userId, String otp) {
-        if (!verificationService.verifyOtp(userId, otp)) {
-            throw new SecurityException("Invalid OTP");
-        }
-        User user = getUser(userId);
-        user.setAccountState(AccountState.ACTIVE);
-        userRepository.save(user);
-        return new AuthSession(user.getUserId(), user.getRole(), user.getAccountState(), false);
+        return new AuthSession(user.getUserId(), user.getRole(), user.getAccountState());
     }
 
     public void logout(Integer userId) {

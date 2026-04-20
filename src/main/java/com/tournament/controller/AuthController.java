@@ -65,17 +65,4 @@ public class AuthController {
         }
         return "redirect:/login";
     }
-
-    @PostMapping("/verify-otp")
-    public String verifyOtp(@RequestParam Integer userId,
-                            @RequestParam String otp,
-                            RedirectAttributes redirectAttributes) {
-        try {
-            authManager.verifyOtp(userId, otp);
-            redirectAttributes.addFlashAttribute("success", "OTP verified. Login complete.");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
-        }
-        return "redirect:/login";
-    }
 }

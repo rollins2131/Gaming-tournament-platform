@@ -17,10 +17,4 @@ class AuthManagerTest {
         // TODO: add unit test with mocked repositories
         assertTrue(true);
     }
-
-    @Test
-    void otpValidation_success() {
-        // TODO: add unit test with mocked repositories
-        assertTrue(true);
-    }
 }
