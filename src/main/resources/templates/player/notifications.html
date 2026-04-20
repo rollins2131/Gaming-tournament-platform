@@ -1,13 +1,19 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head th:replace="~{fragments/layout :: head('Notifications')}"></head>
+
 <body class="dashboard-page">
     <nav th:replace="~{fragments/layout :: navbar}"></nav>
 
     <div class="container mt-4 mb-4">
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h3 class="text-white mb-0"><i class="bi bi-bell"></i> Notifications</h3>
-            <form th:action="@{/player/notifications/read-all}" method="post" th:unless="${#lists.isEmpty(notifications)}">
+            <form th:action="@{/player/notifications/read-all}" method="post"
+                th:unless="${#lists.isEmpty(notifications)}">
                 <button type="submit" class="btn btn-outline-primary btn-sm">
                     <i class="bi bi-check-all"></i> Mark All as Read
                 </button>
@@ -20,11 +26,22 @@
         </div>
 
         <div th:each="notif : ${notifications}" class="card glass-card mb-2"
-             th:classappend="${notif.status.name() == 'READ' ? '' : 'border-start border-primary border-3'}">
+            th:classappend="${notif.status.name() == 'READ' ? '' : 'border-start border-primary border-3'}">
             <div class="card-body py-3">
                 <div class="d-flex justify-content-between">
-                    <p class="mb-0" th:text="${notif.message}">Notification message</p>
-                    <small class="text-muted" th:text="${#temporals.format(notif.sentTime, 'MMM dd, HH:mm')}">Time</small>
+                    <div>
+                        <p class="mb-1" th:text="${notif.message}">Notification message</p>
+                        <span class="badge"
+                            th:classappend="${notif.status.name() == 'DELIVERED' ? ' bg-success' : (notif.status.name() == 'FAILED' ? ' bg-danger' : (notif.status.name() == 'READ' ? ' bg-secondary' : ' bg-info'))}"
+                            th:text="${notif.status}">STATUS</span>
+                        <form th:if="${notif.status.name() == 'FAILED'}"
+                            th:action="@{/player/notifications/{id}/retry(id=${notif.notificationId})}" method="post"
+                            class="d-inline ms-2">
+                            <button type="submit" class="btn btn-sm btn-outline-warning">Retry</button>
+                        </form>
+                    </div>
+                    <small class="text-muted"
+                        th:text="${notif.sentTime != null ? #temporals.format(notif.sentTime, 'MMM dd, HH:mm') : '-'}">Time</small>
                 </div>
             </div>
         </div>
@@ -33,4 +50,5 @@
     <footer th:replace="~{fragments/layout :: footer}"></footer>
     <script th:replace="~{fragments/layout :: scripts}"></script>
 </body>
+
 </html>

@@ -1,10 +1,15 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head th:replace="~{fragments/layout :: head('Reports & Analytics')}"></head>
+
 <body class="dashboard-page">
     <nav th:replace="~{fragments/layout :: navbar}"></nav>
 
     <div class="container-fluid px-4 py-4">
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
         <div class="d-flex align-items-center justify-content-between mb-4">
             <h3 class="text-white mb-0">
                 <i class="bi bi-graph-up-arrow me-2" style="color: #f97316;"></i>Analytics &amp; Reports
@@ -16,6 +21,25 @@
                 <a th:href="@{/admin/dashboard}" class="btn btn-outline-primary">
                     <i class="bi bi-arrow-left"></i> Back to Dashboard
                 </a>
+            </div>
+        </div>
+
+        <div class="card glass-card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-file-earmark-bar-graph me-2" style="color: #06b6d4;"></i>Report
+                    Lifecycle</h5>
+                <span class="status-badge" th:text="${reportStatus}">ARCHIVED</span>
+            </div>
+            <div class="card-body d-flex gap-2 flex-wrap">
+                <form th:action="@{/admin/reports/generate}" method="post">
+                    <button type="submit" class="btn btn-outline-primary">Generate</button>
+                </form>
+                <form th:action="@{/admin/reports/publish}" method="post">
+                    <button type="submit" class="btn btn-outline-success">Publish</button>
+                </form>
+                <form th:action="@{/admin/reports/archive}" method="post">
+                    <button type="submit" class="btn btn-outline-secondary">Archive</button>
+                </form>
             </div>
         </div>
 
@@ -75,7 +99,8 @@
             <div class="card-body">
                 <div class="row g-4 text-center">
                     <div class="col-md-4">
-                        <div class="stat-card-modern" style="flex-direction: column; align-items: center; text-align: center;">
+                        <div class="stat-card-modern"
+                            style="flex-direction: column; align-items: center; text-align: center;">
                             <div class="stat-icon orange mb-3" style="width: 70px; height: 70px; font-size: 1.8rem;">
                                 <i class="bi bi-hourglass-split"></i>
                             </div>
@@ -84,7 +109,8 @@
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="stat-card-modern" style="flex-direction: column; align-items: center; text-align: center;">
+                        <div class="stat-card-modern"
+                            style="flex-direction: column; align-items: center; text-align: center;">
                             <div class="stat-icon blue mb-3" style="width: 70px; height: 70px; font-size: 1.8rem;">
                                 <i class="bi bi-broadcast"></i>
                             </div>
@@ -96,11 +122,13 @@
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="stat-card-modern" style="flex-direction: column; align-items: center; text-align: center;">
+                        <div class="stat-card-modern"
+                            style="flex-direction: column; align-items: center; text-align: center;">
                             <div class="stat-icon green mb-3" style="width: 70px; height: 70px; font-size: 1.8rem;">
                                 <i class="bi bi-patch-check-fill"></i>
                             </div>
-                            <span class="stat-value" style="font-size: 2.5rem;" th:text="${completedTournaments}">0</span>
+                            <span class="stat-value" style="font-size: 2.5rem;"
+                                th:text="${completedTournaments}">0</span>
                             <span class="stat-label">Completed</span>
                         </div>
                     </div>
@@ -119,11 +147,13 @@
                 <div class="row">
                     <div class="col-md-6">
                         <ul class="list-unstyled">
-                            <li class="d-flex justify-content-between align-items-center py-2 border-bottom" style="border-color: rgba(255,255,255,0.1) !important;">
+                            <li class="d-flex justify-content-between align-items-center py-2 border-bottom"
+                                style="border-color: rgba(255,255,255,0.1) !important;">
                                 <span class="text-muted">Total Registered Users</span>
                                 <span class="text-white fw-bold" th:text="${userCount}">0</span>
                             </li>
-                            <li class="d-flex justify-content-between align-items-center py-2 border-bottom" style="border-color: rgba(255,255,255,0.1) !important;">
+                            <li class="d-flex justify-content-between align-items-center py-2 border-bottom"
+                                style="border-color: rgba(255,255,255,0.1) !important;">
                                 <span class="text-muted">Total Tournaments Created</span>
                                 <span class="text-white fw-bold" th:text="${tournamentCount}">0</span>
                             </li>
@@ -135,11 +165,13 @@
                     </div>
                     <div class="col-md-6">
                         <ul class="list-unstyled">
-                            <li class="d-flex justify-content-between align-items-center py-2 border-bottom" style="border-color: rgba(255,255,255,0.1) !important;">
+                            <li class="d-flex justify-content-between align-items-center py-2 border-bottom"
+                                style="border-color: rgba(255,255,255,0.1) !important;">
                                 <span class="text-muted">Upcoming Tournaments</span>
                                 <span class="status-badge status-upcoming" th:text="${upcomingCount}">0</span>
                             </li>
-                            <li class="d-flex justify-content-between align-items-center py-2 border-bottom" style="border-color: rgba(255,255,255,0.1) !important;">
+                            <li class="d-flex justify-content-between align-items-center py-2 border-bottom"
+                                style="border-color: rgba(255,255,255,0.1) !important;">
                                 <span class="text-muted">Live Tournaments</span>
                                 <span class="status-badge status-ongoing" th:text="${ongoingCount}">0</span>
                             </li>
@@ -162,13 +194,16 @@
             <div class="card-body">
                 <div class="row g-3 text-center">
                     <div class="col-md-4">
-                        <div class="status-badge status-pending">Raised: <span th:text="${raisedDisputes}">0</span></div>
+                        <div class="status-badge status-pending">Raised: <span th:text="${raisedDisputes}">0</span>
+                        </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="status-badge status-under_review">Under Review: <span th:text="${underReviewDisputes}">0</span></div>
+                        <div class="status-badge status-under_review">Under Review: <span
+                                th:text="${underReviewDisputes}">0</span></div>
                     </div>
                     <div class="col-md-4">
-                        <div class="status-badge status-completed">Closed: <span th:text="${closedDisputes}">0</span></div>
+                        <div class="status-badge status-completed">Closed: <span th:text="${closedDisputes}">0</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -178,4 +213,5 @@
     <footer th:replace="~{fragments/layout :: footer}"></footer>
     <script th:replace="~{fragments/layout :: scripts}"></script>
 </body>
+
 </html>
