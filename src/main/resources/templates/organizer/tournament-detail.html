@@ -142,7 +142,10 @@
                                         <span th:text="${match.teams[0].teamName}">A</span> vs
                                         <span th:text="${match.teams[1].teamName}">B</span>
                                     </span>
-                                    <span th:if="${match.teams.size() < 2}" class="text-muted">TBD</span>
+                                    <span th:if="${match.teams.size() == 1}" class="text-muted">
+                                        <span th:text="${match.teams[0].teamName}">A</span> vs <span class="text-warning">TBD</span>
+                                    </span>
+                                    <span th:if="${match.teams.size() == 0}" class="text-muted">TBD vs TBD</span>
                                 </td>
                                 <td th:text="${#temporals.format(match.scheduledTime, 'MMM dd, HH:mm')}">Time</td>
                                 <td>
