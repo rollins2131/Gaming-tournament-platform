@@ -39,14 +39,15 @@ class MatchResultTest {
     }
 
     @Test
-    void resultValidation_allowsTieButRejectsNegativeScore() {
+    void resultValidation_rejectsTieAndNegativeScore() {
         Tournament tournament = new Tournament();
         Bracket bracket = new Bracket(BracketType.SINGLE_ELIM, tournament);
         Team winner = new Team("Winner");
         Match match = new Match(1, LocalDateTime.now(), bracket);
 
         Result tiedResult = new Result(2, 2, match, winner);
-        tiedResult.validateScores();
+        IllegalArgumentException tieEx = assertThrows(IllegalArgumentException.class, tiedResult::validateScores);
+        assertEquals("Final result cannot be a tie", tieEx.getMessage());
 
         Result invalid = new Result(-1, 2, match, winner);
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, invalid::validateScores);

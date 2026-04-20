@@ -255,10 +255,6 @@ public class TournamentService {
     }
 
     public Result submitResult(Integer matchId, int scoreA, int scoreB) {
-        return submitResult(matchId, scoreA, scoreB, null);
-    }
-
-    public Result submitResult(Integer matchId, int scoreA, int scoreB, Integer tieBreakerWinnerTeamId) {
         Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new IllegalArgumentException("Match not found"));
 
@@ -273,23 +269,12 @@ public class TournamentService {
 
         Team teamA = match.getTeams().get(0);
         Team teamB = match.getTeams().get(1);
-        Team winner;
-
         if (scoreA == scoreB) {
-            if (tieBreakerWinnerTeamId == null) {
-                throw new IllegalArgumentException("Scores are tied. Select a winner for tie-break.");
-            }
-
-            if (Objects.equals(teamA.getTeamId(), tieBreakerWinnerTeamId)) {
-                winner = teamA;
-            } else if (Objects.equals(teamB.getTeamId(), tieBreakerWinnerTeamId)) {
-                winner = teamB;
-            } else {
-                throw new IllegalArgumentException("Invalid tie-break winner selected");
-            }
-        } else {
-            winner = (scoreA > scoreB) ? teamA : teamB;
+            throw new IllegalArgumentException(
+                    "Knockout matches cannot end in a tie. Enter the final overtime/penalty score.");
         }
+
+        Team winner = (scoreA > scoreB) ? teamA : teamB;
 
         Result result = new Result(scoreA, scoreB, match, winner);
         result.validateScores();
