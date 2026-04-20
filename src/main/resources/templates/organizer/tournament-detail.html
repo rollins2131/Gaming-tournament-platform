@@ -71,6 +71,14 @@
                             <i class="bi bi-check-circle"></i> Declare Complete
                         </button>
                     </form>
+
+                    <form th:if="${tournament.status.name() == 'COMPLETED'}"
+                          th:action="@{/organizer/tournaments/{id}/delete(id=${tournament.tournamentId})}"
+                          method="post">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash-fill"></i> Delete Tournament
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>

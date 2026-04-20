@@ -41,11 +41,34 @@
                 </div>
 
                 <div th:if="${tournament.status.name() == 'REGISTRATION_OPEN'}">
-                    <form th:action="@{/player/tournaments/{id}/join(id=${tournament.tournamentId})}" method="post">
-                        <button type="submit" class="btn btn-success">
-                            <i class="bi bi-plus-circle"></i> Join Tournament (Solo)
-                        </button>
-                    </form>
+                    <div th:if="${tournament.teamSize == 1}">
+                        <form th:action="@{/player/tournaments/{id}/join(id=${tournament.tournamentId})}" method="post">
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-plus-circle"></i> Join Tournament (Solo)
+                            </button>
+                        </form>
+                    </div>
+                    <div th:if="${tournament.teamSize > 1}">
+                        <form th:action="@{/player/tournaments/{id}/join-team(id=${tournament.tournamentId})}" method="post">
+                            <div class="mb-3">
+                                <label for="teamName" class="form-label">Team Name</label>
+                                <input type="text" class="form-control" id="teamName" name="teamName" required
+                                       placeholder="Enter your team name">
+                            </div>
+                            <div class="mb-3">
+                                <label for="memberTags" class="form-label">Member Gamer Tags</label>
+                                <input type="text" class="form-control" id="memberTags" name="memberTags" required
+                                       placeholder="Enter comma-separated gamer tags">
+                                <div class="form-text">
+                                    Enter exactly <strong th:text="${tournament.teamSize}">1</strong> gamer tags,
+                                    including your own.
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-plus-circle"></i> Register Team
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>

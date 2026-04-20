@@ -85,8 +85,58 @@ public class PlayerController {
             RedirectAttributes redirectAttributes) {
         try {
             Player player = getCurrentPlayer(auth);
+            Tournament tournament = tournamentService.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Tournament not found"));
+
+            if (tournament.getTeamSize() != 1) {
+                throw new IllegalArgumentException("This tournament requires team registration. Use the team join form.");
+            }
+
             tournamentService.registerSoloPlayer(id, player);
             redirectAttributes.addFlashAttribute("success", "Successfully joined the tournament!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/player/tournaments/" + id;
+    }
+
+    @PostMapping("/tournaments/{id}/join-team")
+    public String joinTeamTournament(@PathVariable Integer id,
+            @RequestParam String teamName,
+            @RequestParam String memberTags,
+            Authentication auth,
+            RedirectAttributes redirectAttributes) {
+        try {
+            Player currentPlayer = getCurrentPlayer(auth);
+            Tournament tournament = tournamentService.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Tournament not found"));
+
+            if (tournament.getTeamSize() == 1) {
+                throw new IllegalArgumentException("This tournament only allows solo registration.");
+            }
+
+            List<String> tags = List.of(memberTags.split(","));
+            List<String> cleanedTags = tags.stream()
+                    .map(String::trim)
+                    .filter(tag -> !tag.isEmpty())
+                    .distinct()
+                    .toList();
+
+            if (!cleanedTags.contains(currentPlayer.getGamerTag())) {
+                cleanedTags.add(currentPlayer.getGamerTag());
+            }
+
+            if (cleanedTags.size() != tournament.getTeamSize()) {
+                throw new IllegalArgumentException("Enter exactly " + tournament.getTeamSize() + " unique gamer tags, including your own.");
+            }
+
+            List<Player> members = cleanedTags.stream()
+                    .map(tag -> playerRepository.findByGamerTag(tag)
+                            .orElseThrow(() -> new IllegalArgumentException("Player with gamer tag '" + tag + "' not found")))
+                    .toList();
+
+            tournamentService.registerTeam(id, teamName, members);
+            redirectAttributes.addFlashAttribute("success", "Team registered successfully! Awaiting approval.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }

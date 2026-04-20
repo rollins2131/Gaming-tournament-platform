@@ -202,6 +202,18 @@ public class OrganizerController {
         return "redirect:/organizer/tournaments/" + id;
     }
 
+    @PostMapping("/tournaments/{id}/delete")
+    public String deleteTournament(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
+        try {
+            tournamentService.deleteTournament(id);
+            redirectAttributes.addFlashAttribute("success", "Completed tournament deleted successfully.");
+            return "redirect:/organizer/dashboard";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/organizer/tournaments/" + id;
+        }
+    }
+
     @GetMapping("/tournaments/{id}/report")
     public String tournamentReport(@PathVariable Integer id, Authentication auth, Model model) {
         Organizer organizer = getCurrentOrganizer(auth);

@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -93,6 +94,15 @@ public class TournamentService {
         return tournamentRepository.save(tournament);
     }
 
+    public void deleteTournament(Integer tournamentId) {
+        Tournament tournament = tournamentRepository.findById(tournamentId)
+                .orElseThrow(() -> new IllegalArgumentException("Tournament not found"));
+        if (tournament.getStatus() != TournamentStatus.COMPLETED) {
+            throw new IllegalStateException("Only completed tournaments can be deleted");
+        }
+        tournamentRepository.delete(tournament);
+    }
+
     public Optional<Tournament> findById(Integer id) {
         return tournamentRepository.findById(id);
     }
@@ -159,6 +169,46 @@ public class TournamentService {
         return registerPlayer(tournamentId, player, soloTeam);
     }
 
+    public List<Registration> registerTeam(Integer tournamentId, String teamName, List<Player> players) {
+        Tournament tournament = tournamentRepository.findById(tournamentId)
+                .orElseThrow(() -> new IllegalArgumentException("Tournament not found"));
+
+        if (tournament.getStatus() != TournamentStatus.REGISTRATION_OPEN) {
+            throw new IllegalStateException("Registration is not open for this tournament");
+        }
+
+        if (players == null || players.size() != tournament.getTeamSize()) {
+            throw new IllegalArgumentException("Team must contain exactly " + tournament.getTeamSize() + " players");
+        }
+
+        for (Player player : players) {
+            if (registrationRepository.existsByTournament_TournamentIdAndPlayer_UserId(
+                    tournamentId, player.getUserId())) {
+                throw new IllegalArgumentException("Player " + player.getGamerTag() + " is already registered for this tournament");
+            }
+        }
+
+        Team team = new Team(teamName);
+        team.setMembers(players);
+        team = teamRepository.save(team);
+
+        if (registrationRepository.existsByTournament_TournamentIdAndTeam_TeamId(tournamentId, team.getTeamId())) {
+            throw new IllegalArgumentException("Team already registered for this tournament");
+        }
+
+        List<Registration> savedRegistrations = players.stream()
+                .map(player -> {
+                    Registration registration = new Registration(tournament, team, player);
+                    registration.setStatus(RegistrationStatus.PENDING);
+                    registration.submitForReview();
+                    return registrationRepository.save(registration);
+                })
+                .toList();
+
+        savedRegistrations.forEach(reg -> observers.forEach(o -> o.onRegistration(reg.getPlayer(), tournament)));
+        return savedRegistrations;
+    }
+
     public Registration approveRegistration(Integer registrationId) {
         Registration registration = registrationRepository.findById(registrationId)
                 .orElseThrow(() -> new IllegalArgumentException("Registration not found"));
@@ -180,6 +230,16 @@ public class TournamentService {
     public List<Registration> getApprovedRegistrations(Integer tournamentId) {
         return registrationRepository.findByTournament_TournamentIdAndStatus(
                 tournamentId, RegistrationStatus.APPROVED);
+    }
+
+    public List<Team> getApprovedTeams(Integer tournamentId) {
+        return registrationRepository.findByTournament_TournamentIdAndStatus(
+                tournamentId, RegistrationStatus.APPROVED).stream()
+                .map(Registration::getTeam)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toMap(Team::getTeamId, team -> team, (existing, replacement) -> existing))
+                .values().stream()
+                .toList();
     }
 
     public List<Registration> getPlayerRegistrations(Integer playerId) {
